@@ -1,0 +1,16 @@
+{
+    "name": "openai-proxy",
+    "description": "Functions for OpenAI proxy",
+    "version": "0.0.1",
+    "main": "./dist/index.js",
+    "scripts": {
+        "build": "mkdir -p dist && cp src/index.js dist/index.js", 
+        "start": "node ./dist/index.js"
+    },
+    "keywords": [
+        "test"
+    ],
+    "author": "Slendy",
+    "license": "MIT",
+    "devDependencies": {}
+}
