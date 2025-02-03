@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap');
 
+*, *::after, *::before{
+  box-sizing: border-box;
+}
+
 html,body{
   margin: 0;
   padding: 0;
@@ -41,6 +45,10 @@ img{
   color: white;
 }
 
+form{
+  width: 100%;
+}
+
 textarea{
   background: #073A67;
   border: 4px solid #3F607C;
@@ -60,13 +68,27 @@ button{
   cursor: pointer;
 }
 
-.submit-btn{
-  background: #3F607C;
+.submit-btn, .capture-btn{
   border-radius: 10px;
   border: none;
   font-size: 1.375em;
   font-weight: 700;
-  padding: .3em
+  padding: .3em .5em;
+}
+
+.submit-btn{
+  background: #3F607C;
+  width: 50%;
+}
+
+.capture-btn{
+  color: #3F607C;
+  margin-right: .55em;
+  width: 44%;
+}
+
+.btn-container{
+  width: 80%;
 }
 
 button:hover{
@@ -75,4 +97,54 @@ button:hover{
 
 button:active{
   box-shadow: inset 2px 10px 10px 2px #00000040;
+}
+
+.profile-pic{
+  width: 47px;
+  border-radius: 50%;
+}
+
+.message-container{
+  width: 100%;
+  text-align: center;
+}
+
+.user-message, .ai-message{
+  display: flex;
+  gap: 1em;
+  align-items: center;
+  margin-bottom: 1.2em;
+}
+
+.user-message{
+  margin-right: auto;
+}
+
+.ai-message{
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+.user-message > p, .ai-message > p{
+  border-radius: 10px;
+  padding: .66em;
+  font-size: .8rem;
+  margin: .4em 0 0;
+  text-align: justify;
+  font-family: inherit;
+}
+
+.user-message > p {
+  background: #33628A;
+}
+
+.ai-message > p{
+  color: black;
+  background: #F1F8FF;
+}
+
+.crono-stamp{
+  color: #3F607C;
+  font-size: .75rem;
+  font-weight: 700;
 }
