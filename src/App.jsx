@@ -1,18 +1,64 @@
 import React from "react"
 import user from "./assets/user.png"
 import Message from "./Message"
+import { combineDocuments } from "./utils/combineDocuments"
+import { formatConvHistory } from "./utils/formatConvHistory"
 
+import { PromptTemplate } from "@langchain/core/prompts"
+import { StringOutputParser } from "@langchain/core/output_parsers"
+import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables"
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
-import { createClient } from '@supabase/supabase-js'
+
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase"
-import {OpenAIEmbeddings } from "@langchain/openai"
+
+import { embeddings, llm, retriever, client} from "./utils/apiDeclar"
 
 function App() {
 
   const [messageArray, setMessageArray] = React.useState([])
   const [input, setInput] = React.useState("")
 
-  function sendMessage(e){
+  const answerTemplate = `You are a helpful and ethusiastic assitant who can answer a given question about the current user based in the context provided and the conversation history. Try to find the answer in the context. If the answer is not given in the context, find the answer in the conversation history if possbile. If you really don't know the answer, say "I'm sorry, I don't know the answer to that". And ask the questioner to capture the answer so you can answer it correctly in the future. Don't try to make up an answer. Always speak as if you were chatting to a friend.
+  context: {context}
+  conversation_history: {conv_history}
+  question: {question}
+  answer: `
+  const answerPrompt = PromptTemplate.fromTemplate(answerTemplate)
+
+  const standaloneQuestionTemplate = `Given some conversation history (if any) and a question, convert the question to a standalone question. 
+  conversation history: {conv_history}
+  question: {question} 
+  standalone question: `
+  const standaloneQuestionPrompt = PromptTemplate.fromTemplate(standaloneQuestionTemplate)
+
+  const standaloneQuestionChain = standaloneQuestionPrompt
+    .pipe(llm)
+    .pipe(new StringOutputParser())
+
+  const retrieverChain = RunnableSequence.from([
+    prevResult => prevResult.standalone_question,
+    retriever,
+    combineDocuments
+  ])
+
+  const answerChain = answerPrompt
+    .pipe(llm)
+    .pipe(new StringOutputParser())
+
+  const chain = RunnableSequence.from([
+    {
+        standalone_question: standaloneQuestionChain,
+        original_input: new RunnablePassthrough()
+    },
+    {
+        context: retrieverChain,
+        question: ({ original_input }) => original_input.question,
+        conv_history: ({ original_input }) => original_input.conv_history
+    },
+    answerChain
+  ])
+
+  async function sendMessage(e){
     e.preventDefault()
 
     if(input !== ""){
@@ -22,8 +68,21 @@ function App() {
           {message: input, timeStamp: new Date(), isUser: true}
         ]
       })
+      const question = input
+      setInput("")
 
-      
+      const response = await chain.invoke({
+        question: question,
+        conv_history: formatConvHistory(messageArray)
+      })
+
+      setMessageArray(oldMessageArray => {
+        return [
+          ...oldMessageArray,
+          {message: response, timeStamp: new Date(), isUser: false}
+        ]
+      })
+
     }
     setInput("")
   }
@@ -40,15 +99,10 @@ function App() {
       
       const output = await splitter.createDocuments([text])
       
-      const sbApiKey = import.meta.env.VITE_SUPABASE_KEY
-      const sbUrl = import.meta.env.VITE_SUPABASE_URL
-      const openAIApiKey = import.meta.env.VITE_OPENAI_API_KEY
-      
-      const client = createClient(sbUrl, sbApiKey)
-      
+
       await SupabaseVectorStore.fromDocuments(
           output,
-          new OpenAIEmbeddings({ openAIApiKey }),
+          embeddings,
           {
              client,
              tableName: 'documents',

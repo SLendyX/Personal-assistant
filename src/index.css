@@ -101,6 +101,7 @@ button:active{
 
 .profile-pic{
   width: 47px;
+  height: 47px;
   border-radius: 50%;
 }
 
@@ -130,7 +131,7 @@ button:active{
   padding: .66em;
   font-size: .8rem;
   margin: .4em 0 0;
-  text-align: justify;
+  text-align:left;
   font-family: inherit;
 }
 
