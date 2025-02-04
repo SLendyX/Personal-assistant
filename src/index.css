@@ -47,6 +47,7 @@ img{
 
 form{
   width: 100%;
+  align-items: start;
 }
 
 textarea{
@@ -57,6 +58,7 @@ textarea{
   padding: .5em 1em;
   min-height: 100px;
   resize: vertical;
+  width:90%;
 }
 
 textarea::-webkit-input-placeholder{
@@ -88,7 +90,7 @@ button{
 }
 
 .btn-container{
-  width: 80%;
+  width: 90%;
 }
 
 button:hover{
@@ -129,7 +131,7 @@ button:active{
 .user-message > p, .ai-message > p{
   border-radius: 10px;
   padding: .66em;
-  font-size: .8rem;
+  font-size: .9rem;
   margin: .4em 0 0;
   text-align:left;
   font-family: inherit;
