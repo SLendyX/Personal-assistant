@@ -1,6 +1,7 @@
 import React from "react";
-import user from "./assets/user.png"
-import ai from "./assets/ai.png"
+import user from "../assets/user.png"
+import ai from "../assets/ai.png"
+
 
 export default function({children, timeStamp, isUser, ...props}){
     return (

@@ -81,17 +81,19 @@ button{
 
 .submit-btn{
   background: #3F607C;
-  width: 50%;
+  width: 45%;
 }
 
 .capture-btn{
   color: #3F607C;
   margin-right: .55em;
-  width: 44%;
+  width: 40%;
 }
 
 .btn-container{
-  width: 90%;
+  display: flex;
+  width: 100%;
+  align-items: center;
 }
 
 button:hover{
@@ -151,4 +153,15 @@ button:active{
   color: #3F607C;
   font-size: .75rem;
   font-weight: 700;
+}
+
+.microphone{
+  background: none;
+  border-radius: 50%;
+  border: none;
+  width: 5%
+}
+
+.microphone-svg{
+  width: 35px;
 }
