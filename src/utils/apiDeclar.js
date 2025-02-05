@@ -17,4 +17,4 @@ tableName: 'documents',
 queryName: 'match_documents'
 })
   
-export const retriever = vectorStore.asRetriever()
+export const retriever = vectorStore.asRetriever(7)

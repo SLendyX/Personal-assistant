@@ -10,6 +10,7 @@ html,body{
   background-color: #012442;
   font-family: "Inter", serif;
   color: white;
+  padding-bottom: 20px;
 }
 
 #root, form{
@@ -115,7 +116,7 @@ button:active{
 .user-message, .ai-message{
   display: flex;
   gap: 1em;
-  align-items: center;
+  align-items: start;
   margin-bottom: 1.2em;
 }
 

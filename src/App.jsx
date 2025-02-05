@@ -1,75 +1,34 @@
 import React from "react"
 import user from "./assets/user.png"
 import Message from "./Message"
-import { combineDocuments } from "./utils/combineDocuments"
-import { formatConvHistory } from "./utils/formatConvHistory"
 
-import { PromptTemplate } from "@langchain/core/prompts"
-import { StringOutputParser } from "@langchain/core/output_parsers"
-import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables"
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
-
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase"
 
-import { embeddings, llm, retriever, client} from "./utils/apiDeclar"
+import { formatConvHistory } from "./utils/formatConvHistory"
+import { embeddings, client} from "./utils/apiDeclar"
+import { chain, sintezaChain, postChain } from "./utils/prompts"
+import mic from "./assets/mic.svg"
+
+import createModule from "@transcribe/shout";
+import { FileTranscriber } from "@transcribe/transcriber";
+
+const transcriber = new FileTranscriber({
+  createModule,
+  model: "ggml-tiny-q5_1.bin", // path to ggml model file
+});
+await transcriber.init();
 
 function App() {
-
   const [messageArray, setMessageArray] = React.useState([])
   const [input, setInput] = React.useState("")
+  const [recordingStop, setRecordingStop] = React.useState(false)
+  const [recorder, setRecorder] = React.useState(new MicRecorder({
+    bitRate: 128
+  }))
 
-  const sintezaTemplate = `You are a helpful enthusiastic assitant. You take a context and reformulate it in as little words as possible.
-  context: {context}
-  answer: `
-  const sintezaPrompt = PromptTemplate.fromTemplate(sintezaTemplate)
-  const sintezaChain = sintezaPrompt.pipe(llm).pipe(new StringOutputParser())
+  
 
-
-  const postTemplate = `You are a helpful enthusiastic assitant. Formulate an apropriate answer based on the given context saying how you will rememeber the request for future refrence.
-  context: {context}
-  answer: `
-  const postPrompt = PromptTemplate.fromTemplate(postTemplate)
-  const postChain = postPrompt.pipe(llm).pipe(new StringOutputParser())
-
-  const answerTemplate = `You are a helpful and ethusiastic assitant who can answer a given question about the current user based in the context provided and the conversation history. Try to find the answer in the context. If the answer is not given in the context, find the answer in the conversation history if possbile. If you really don't know the answer, say "I'm sorry, I don't know the answer to that". And ask the questioner to capture the answer so you can answer it correctly in the future. Don't try to make up an answer. Always speak as if you were chatting to a friend.
-  context: {context}
-  conversation_history: {conv_history}
-  question: {question}
-  answer: `
-  const answerPrompt = PromptTemplate.fromTemplate(answerTemplate)
-
-  const standaloneQuestionTemplate = `Given some conversation history (if any) and a question, convert the question to a standalone question. 
-  conversation history: {conv_history}
-  question: {question} 
-  standalone question: `
-  const standaloneQuestionPrompt = PromptTemplate.fromTemplate(standaloneQuestionTemplate)
-
-  const standaloneQuestionChain = standaloneQuestionPrompt
-    .pipe(llm)
-    .pipe(new StringOutputParser())
-
-  const retrieverChain = RunnableSequence.from([
-    prevResult => prevResult.standalone_question,
-    retriever,
-    combineDocuments
-  ])
-
-  const answerChain = answerPrompt
-    .pipe(llm)
-    .pipe(new StringOutputParser())
-
-  const chain = RunnableSequence.from([
-    {
-        standalone_question: standaloneQuestionChain,
-        original_input: new RunnablePassthrough()
-    },
-    {
-        context: retrieverChain,
-        question: ({ original_input }) => original_input.question,
-        conv_history: ({ original_input }) => original_input.conv_history
-    },
-    answerChain
-  ])
 
   function renderMessages(message, isUser){
     setMessageArray(oldMessageArray => {
@@ -156,6 +115,39 @@ function App() {
     }
     )
 
+    function record(){
+      if(!recordingStop){
+        try{
+          recorder.start()
+        }catch(err){
+          console.log(err)
+        }
+        
+      }else{
+        recorder.stop().getMp3().then(async ([buffer, blob]) => {
+          const file = new File([blob], "voice.mp3", {
+            type: blob.type,
+            lastModified: Date.now(),
+          });
+
+          const result = await transcriber.transcribe(URL.createObjectURL(file));
+
+          console.log(result)
+
+        }).catch((e) => {
+          alert('We could not retrieve your message');
+          console.log(e);
+        });
+      }
+
+      setRecordingStop(oldRecordingStop => !oldRecordingStop)
+    }
+
+    React.useEffect(()=>{
+      window.scroll(0, window.scrollY+2000)
+    },[messageArray])
+
+
   return (
     <>
       <img src={user} className="main-img" alt="ai assitant profile picture"/>
@@ -173,6 +165,7 @@ function App() {
         <div className="btn-container">
           <button onClick={uploadMessage} className="capture-btn">Capture</button>
           <button onClick={sendMessage} className="submit-btn">Ask</button>
+          <button onClick={record}><img src={mic}/></button>
         </div>
       </form>
 
